@@ -1,7 +1,7 @@
 # gathernews
 
-import newspaper
 import nltk
+import newspaper
 
 keyword = input("Enter a keyword or press 'Enter':")
 
