@@ -2,58 +2,52 @@
 
 import nltk
 import newspaper
+import webbrowser
+
+url = ('https://polygon.com/')
+pcgamer = 'https://pcgamer.com/'
+theverge = 'https://theverge.com/'
+
+sites = (url,pcgamer,theverge)
+keywordarticle = list()
+scrapedarticle = list()
+
+def articlescraper(source):
+    news_source = newspaper.build(source, memoize_articles=False)
+    for article in news_source.articles:
+        scrapedarticle.append(article)
+
+def scraper(sources):
+    collected = list()
+    for source in sources:
+        articlescraper(source)
+
+scraper(sites)
 
 keyword = input("Enter a keyword or press 'Enter':")
 
-polygon = newspaper.build('http://polygon.com')
+print('Gathering up news')
 
-pcgamer = newspaper.build('http://pcgamer.com')
+for article in scrapedarticle:
+    if keyword in article.url:
+        keywordarticle.append(article)
 
-theverge = newspaper.build('http://theverge.com')
+writer = open('news_summary.txt', 'w', encoding="utf-8")
 
-
-def articlekeyword(keyword, Article):
+for article in keywordarticle:
     try:
-        Article.download()
-        Article.parse()
-        Article.nlp()
+        article.download()
+        article.parse()
     except:
-        return False
-        if keyword in Article.keywords: return True
-        return False
+        continue
+        writer.write('\n' + str(article.title))
+        writer.write('-')
 
+    for author in article.authors:
+        if author != article.authors[0]:
+            writer.write(',')
+        writer.write(str(author))
 
-def articleScraper(keyword, articles, myArticles):
-    tempSummaries = ""
-    for Article in articles:
-        if keyword == "" or articlekeyword(keyword, Article):
-            try:
-                myArticles.append(Article)
-                Article.download()
-                Article.parse()
-            except:
-                continue
-                tempSummaries += Article.title
-                tempSummaries += "-"
-                tempSummaries += ",".join(Article.authors)
-                Article.nlp()
-                tempSummaries += "\n"
-                tempSummaries += Article.summary
-                tempSummaries += "\n\n"
-            return tempSummaries
-
-
-myArticles = []
-summaries = ""
-summaries += articleScraper(keyword, polygon.articles[:10], myArticles)
-summaries += articleScraper(keyword, pcgamer.articles[:10], myArticles)
-summaries += articleScraper(keyword, theverge.articles[:10], myArticles)
-
-summaries = summaries.encode("ascii", "ignore").decode()
-with open("news_summary.txt", "w")as f:
-    f.write(summaries)
-
-print("sourced form:")
-print("Polygon")
-print("PCGamer")
-print("TheVerge")
+    article.nlp()
+    writer.write('\n' + article.summary + '\n\n')
+writer.close()
